@@ -1,0 +1,17 @@
+{
+  "name": "staff-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "${env:STAFF_DB_HOST}",
+    "database.port": "${env:STAFF_DB_PORT}",
+    "database.user": "${env:STAFF_DB_USER}",
+    "database.password": "${env:STAFF_DB_PASSWORD}",
+    "database.dbname": "${env:STAFF_DB_NAME}",
+    "table.include.list": "public.sub_module_data",
+    "topic.prefix": "staff",
+    "plugin.name": "pgoutput",
+    "snapshot.mode": "initial",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": false
+  }
+}

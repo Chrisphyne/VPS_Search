@@ -1,0 +1,34 @@
+[theme]
+primaryColor = "#007BFF"          # Vibrant Blue for accents, focus states, and progress bars
+backgroundColor = "#F5F6F5"       # Soft White for main background
+secondaryBackgroundColor = "#E7EDE9"  # Light Grey-Green for sidebar, inputs, and containers
+# secondaryBackgroundColor = "#007BFF"
+textColor = "#000000"             # Black for text
+font = "roboto"
+
+
+
+
+
+
+
+
+
+
+# [theme]
+# primaryColor = "#ffd700"             # Gold
+
+# # backgroundColor = "#1e2a44"           # Navy Blue
+
+# backgroundColor = "#b9beba"           # New Deeper Blue
+
+# # secondaryBackgroundColor = "#2a3b5c" # Lighter Blue
+
+# secondaryBackgroundColor = "#e7ede9" # New Lighter Blue
+
+
+# # textColor = "#ffffff"                # White
+
+# textColor = "#000000"                # Black
+
+# font = "sans serif"

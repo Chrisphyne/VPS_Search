@@ -1,0 +1,127 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+    networks:
+      - app-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9093:9093"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - app-network
+
+  kafka-connect:
+    image: debezium/connect:2.3
+    container_name: kafka-connect
+    depends_on:
+      - kafka
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: connect-group
+      CONFIG_STORAGE_TOPIC: connect-configs
+      OFFSET_STORAGE_TOPIC: connect-offsets
+      STATUS_STORAGE_TOPIC: connect-status
+      MAIN_DB_HOST: ${MAIN_DB_HOST}
+      MAIN_DB_PORT: ${MAIN_DB_PORT}
+      MAIN_DB_NAME: ${MAIN_DB_NAME}
+      MAIN_DB_USER: ${MAIN_DB_USER}
+      MAIN_DB_PASSWORD: ${MAIN_DB_PASSWORD}
+      STAFF_DB_HOST: ${STAFF_DB_HOST}
+      STAFF_DB_PORT: ${STAFF_DB_PORT}
+      STAFF_DB_NAME: ${STAFF_DB_NAME}
+      STAFF_DB_USER: ${STAFF_DB_USER}
+      STAFF_DB_PASSWORD: ${STAFF_DB_PASSWORD}
+    volumes:
+      - ./debezium-config:/kafka/connect
+      - ./kafka-config/connect-log4j.properties:/kafka/config/connect-log4j.properties
+      - ./kafka-config/connect-standalone.properties:/kafka/config/connect-standalone.properties
+    networks:
+      - app-network
+    command: >
+      bash -c "
+        sleep 10 &&
+        /kafka/bin/connect-standalone.sh /kafka/config/connect-standalone.properties &&
+        curl -X POST -H 'Content-Type: application/json' --data @/kafka/connect/main-connector.json http://localhost:8083/connectors &&
+        [ -f /kafka/connect/staff-connector.json ] && curl -X POST -H 'Content-Type: application/json' --data @/kafka/connect/staff-connector.json http://localhost:8083/connectors || true
+      "
+
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - app-network
+
+  staff-db:
+    image: postgres:15.4
+    restart: always
+    container_name: main-ob-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: staff_db
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - staff-db-data:/var/lib/postgresql/data
+    command: [
+        "postgres",
+        "-c",
+        "wal_level=logical",
+        # "postgres", "-c","shared_preload_libraries= ‘pg_logical, bdr’",
+        # "postgres", "-c","track_commit_timestamp= ‘on’",
+      ]
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15.4
+    container_name: main-db
+    restart: always
+    environment:
+      - POSTGRES_USER=tweetsadmin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=tweets
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
+  staff-db-data:
+  zookeeper-data:
+  kafka-data:
+  es-data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+    meilisearch:
+        container_name: meilisearch_instance
+        image: getmeili/meilisearch:v1.14.0
+        # image: meilisearch-experimental
+        ports:
+            - "7700:7700"
+        env_file:
+            - .env
+        environment:
+            - MEILI_ENV=production
+            - MEILI_NO_ANALYTICS=true
+            - MEILI_SCHEDULE_SNAPSHOT=86400
+            - MEILI_SNAPSHOT_DIR=/meili_data/snapshots
+            - MEILI_LOG_LEVEL=DEBUG
+            - MEILI_MASTER_KEY=$MEILISEARCH_API_KEY
+            #- MEILI_HTTP_PAYLOAD_SIZE_LIMIT="524288000" # 500MB
+
+        command: >
+            /bin/meilisearch
+            --env development
+
+        volumes:
+            - meilisearch_data:/meili_data
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        ulimits:
+            nofile:
+                soft: 65535
+                hard: 65535
+        networks:
+            - meili_network
+
+    streamlit:
+        container_name: streamlit_app
+        image: python:3.9-slim
+        working_dir: /app
+        ports:
+            - "8505:8501"
+        env_file:
+            - .env
+        volumes:
+            - ./playground:/app
+        command: >
+            bash -c "pip install --upgrade pip && pip install -r requirements.txt --index-url https://pypi.org/simple && streamlit run app.py --server.port 8501 --server.address 0.0.0.0"
+        depends_on:
+            - meilisearch
+        networks:
+            - meili_network
+
+networks:
+    meili_network:
+        driver: bridge
+
+volumes:
+    meilisearch_data:

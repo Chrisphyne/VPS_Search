@@ -1,0 +1,17 @@
+{
+  "name": "main-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "${env:MAIN_DB_HOST}",
+    "database.port": "${env:MAIN_DB_PORT}",
+    "database.user": "${env:MAIN_DB_USER}",
+    "database.password": "${env:MAIN_DB_PASSWORD}",
+    "database.dbname": "${env:MAIN_DB_NAME}",
+    "table.include.list": "public.sub_module,public.sub_module_data",
+    "topic.prefix": "main",
+    "plugin.name": "pgoutput",
+    "snapshot.mode": "initial",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": false
+  }
+}
