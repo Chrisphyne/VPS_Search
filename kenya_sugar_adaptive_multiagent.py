@@ -60,14 +60,20 @@ class AdaptiveKenyaSugarAnalyzer:
         if api_key_tavily:
             os.environ["TAVILY_API_KEY"] = api_key_tavily
             
-        # Initialize Google Gemini language model
+        # Initialize Google Gemini language model (using direct API, not Vertex AI)
         try:
-            self.llm = init_chat_model("gemini/gemini-2.0-flash-exp", temperature=0)
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            self.llm = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash-exp",
+                temperature=0,
+                google_api_key=os.getenv("GOOGLE_API_KEY")
+            )
             print("🤖 Google Gemini LLM initialized!")
         except Exception as e:
             print(f"❌ Error initializing Google Gemini: {e}")
             print("💡 Please ensure you have set GOOGLE_API_KEY environment variable")
             print("💡 Get your API key from: https://aistudio.google.com/app/apikey")
+            print("💡 You may need to install: pip install langchain-google-genai")
             raise
                 
         # Auto-detect and load data
