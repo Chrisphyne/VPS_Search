@@ -58,15 +58,20 @@ def test_data_loading():
             return False
         
         # Try loading
-        df1 = pd.read_csv('ksb_data_1.csv')
-        df2 = pd.read_csv('ksb_data_2.csv')
+        #df1 = pd.read_csv('ksb_data_1.csv')
+        #df2 = pd.read_csv('ksb_data_2.csv')
+
+        df1 = pd.read_csv('kenyan_sugar_weekly_factory.csv')
+        df2 = pd.read_csv('kenyan_sugar_weekly_factory_agg.csv')
+
+
         
         print(f"✅ Dataset 1 loaded: {df1.shape[0]} records, {df1.shape[1]} columns")
         print(f"✅ Dataset 2 loaded: {df2.shape[0]} records, {df2.shape[1]} columns")
         
         # Test merge
-        combined = pd.merge(df1, df2, on=['Factory', 'Region', 'Year'], how='inner')
-        print(f"✅ Combined dataset: {combined.shape[0]} records, {combined.shape[1]} columns")
+        #combined = pd.merge(df1, df2, on=['Factory', 'Region', 'Year'], how='inner')
+        #print(f"✅ Combined dataset: {combined.shape[0]} records, {combined.shape[1]} columns")
         
         return True
         

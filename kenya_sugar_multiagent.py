@@ -78,8 +78,8 @@ class KenyaSugarDataAnalyzer:
         
         # Load the CSV files
         try:
-            self.ksb_df_1 = pd.read_csv('ksb_data_1.csv')
-            self.ksb_df_2 = pd.read_csv('ksb_data_2.csv')
+            self.ksb_df_1 = pd.read_csv('kenyan_sugar_weekly_factory.csv')
+            self.ksb_df_2 = pd.read_csv('kenyan_sugar_weekly_factory_agg.csv')
             print(f"✅ Loaded Dataset 1: {self.ksb_df_1.shape[0]} records")
             print(f"✅ Loaded Dataset 2: {self.ksb_df_2.shape[0]} records")
         except FileNotFoundError:
