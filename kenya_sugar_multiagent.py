@@ -14,9 +14,27 @@ from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_experimental.tools import PythonAstREPLTool
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
-from langchain_tavily import TavilySearchResults
+# Try different import paths for Tavily
+try:
+    from langchain_community.tools.tavily_search import TavilySearchResults
+except ImportError:
+    try:
+        from langchain_tavily import TavilySearchResults
+    except ImportError:
+        try:
+            from tavily import TavilyClient
+            TavilySearchResults = None  # Will use custom implementation
+        except ImportError:
+            TavilySearchResults = None
+
 from langgraph.prebuilt import create_react_agent
-from langgraph_supervisor import create_supervisor
+
+# Try different import paths for supervisor
+try:
+    from langgraph_supervisor import create_supervisor
+except ImportError:
+    # Alternative implementation if langgraph_supervisor is not available
+    create_supervisor = None
 from IPython.display import Image, display
 import warnings
 warnings.filterwarnings('ignore')
@@ -35,7 +53,19 @@ class KenyaSugarDataAnalyzer:
             os.environ["TAVILY_API_KEY"] = api_key_tavily
             
         # Initialize the language model
-        self.llm = init_chat_model("gemini/gemini-2.0-flash-exp", temperature=0)
+        try:
+            self.llm = init_chat_model("gemini/gemini-2.0-flash-exp", temperature=0)
+            print("🤖 Google Gemini LLM initialized!")
+        except Exception as e:
+            print(f"⚠️ Error initializing Gemini: {e}")
+            try:
+                # Fallback to a different model if available
+                self.llm = init_chat_model("gpt-3.5-turbo", temperature=0)
+                print("🤖 OpenAI GPT-3.5 LLM initialized as fallback!")
+            except Exception as e2:
+                print(f"❌ Error initializing LLM: {e2}")
+                print("💡 Please ensure you have a valid API key configured")
+                raise
         
         # Load and prepare data
         self.load_data()
@@ -172,13 +202,18 @@ combined_df.head().to_markdown()
         
         # Initialize Tavily Search Tool
         try:
-            self.tavily_tool = TavilySearchResults(
-                max_results=5,
-                include_domains=["wikipedia.org", "britannica.com", "fao.org", "worldbank.org"],
-                exclude_domains=["youtube.com", "tiktok.com"],
-            )
+            if TavilySearchResults is not None:
+                self.tavily_tool = TavilySearchResults(
+                    max_results=5,
+                    include_domains=["wikipedia.org", "britannica.com", "fao.org", "worldbank.org"],
+                    exclude_domains=["youtube.com", "tiktok.com"],
+                )
+                print("✅ Tavily search tool initialized")
+            else:
+                raise ImportError("TavilySearchResults not available")
         except Exception as e:
             print(f"⚠️ Tavily API not configured: {e}")
+            print("🔄 Using mock search tool for demonstration")
             # Create a mock search tool for demo purposes
             self.tavily_tool = self.create_mock_search_tool()
         
@@ -306,16 +341,24 @@ combined_df.head().to_markdown()
 **Important:** You coordinate and synthesize - delegate the actual work to specialists. Never perform analysis or research directly."""
 
         # Create supervisor workflow
-        self.workflow = create_supervisor(
-            [self.data_retriever_agent, self.web_research_agent],
-            model=self.llm,
-            prompt=supervisor_prompt
-        )
-        
-        # Compile the multi-agent application
-        self.app = self.workflow.compile()
-        
-        print("✅ Multi-agent supervisor system initialized!")
+        try:
+            if create_supervisor is not None:
+                self.workflow = create_supervisor(
+                    [self.data_retriever_agent, self.web_research_agent],
+                    model=self.llm,
+                    prompt=supervisor_prompt
+                )
+                # Compile the multi-agent application
+                self.app = self.workflow.compile()
+                print("✅ Multi-agent supervisor system initialized!")
+            else:
+                print("⚠️ LangGraph supervisor not available, using direct agent coordination")
+                self.app = None
+                print("✅ Direct agent coordination initialized!")
+        except Exception as e:
+            print(f"⚠️ Error creating supervisor: {e}")
+            print("🔄 Using direct agent coordination as fallback")
+            self.app = None
         
     def analyze(self, query: str) -> Dict[str, Any]:
         """Main analysis function using the multi-agent system"""
@@ -325,30 +368,70 @@ combined_df.head().to_markdown()
         print("=" * 80)
         
         try:
-            # Execute multi-agent analysis
-            result = self.app.invoke({"messages": [{"role": "user", "content": query}]})
-            
-            # Format and return results
-            messages = result.get('messages', [])
-            
-            print("\n📋 **ANALYSIS RESULTS:**")
-            print("=" * 80)
-            
-            for i, message in enumerate(messages):
-                if hasattr(message, 'content') and message.content.strip():
-                    role = getattr(message, 'role', 'assistant')
-                    if role == 'user':
-                        continue
-                        
-                    print(f"\n**Response {i}:**")
-                    print(message.content)
-                    print("-" * 60)
-            
-            return {
-                'query': query,
-                'messages': messages,
-                'status': 'success'
-            }
+            if self.app is not None:
+                # Execute multi-agent analysis with supervisor
+                result = self.app.invoke({"messages": [{"role": "user", "content": query}]})
+                
+                # Format and return results
+                messages = result.get('messages', [])
+                
+                print("\n📋 **ANALYSIS RESULTS:**")
+                print("=" * 80)
+                
+                for i, message in enumerate(messages):
+                    if hasattr(message, 'content') and message.content.strip():
+                        role = getattr(message, 'role', 'assistant')
+                        if role == 'user':
+                            continue
+                            
+                        print(f"\n**Response {i}:**")
+                        print(message.content)
+                        print("-" * 60)
+                
+                return {
+                    'query': query,
+                    'messages': messages,
+                    'status': 'success'
+                }
+            else:
+                # Fallback: coordinate agents manually
+                print("🔄 Using direct agent coordination (supervisor not available)")
+                
+                # Step 1: Data analysis
+                print("\n📊 **STEP 1: DATA ANALYSIS**")
+                print("-" * 60)
+                data_result = self.quick_data_analysis(query)
+                
+                # Step 2: Research
+                print("\n🌐 **STEP 2: INDUSTRY RESEARCH**")
+                print("-" * 60)
+                research_result = self.quick_research(f"Research industry context for: {query}")
+                
+                # Step 3: Synthesis
+                print("\n🎯 **STEP 3: SYNTHESIS**")
+                print("-" * 60)
+                synthesis = f"""
+**COMPREHENSIVE ANALYSIS SUMMARY:**
+
+**Data Analysis Results:**
+{data_result}
+
+**Industry Research Context:**
+{research_result}
+
+**Key Insights & Recommendations:**
+Based on the local data analysis and industry research, this provides a comprehensive view 
+of the Kenya Sugar Board situation with actionable insights for strategic decision-making.
+"""
+                print(synthesis)
+                
+                return {
+                    'query': query,
+                    'data_analysis': data_result,
+                    'research': research_result,
+                    'synthesis': synthesis,
+                    'status': 'success_manual'
+                }
             
         except Exception as e:
             error_message = f"Error in multi-agent analysis: {e}"
