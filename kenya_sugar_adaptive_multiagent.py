@@ -60,19 +60,15 @@ class AdaptiveKenyaSugarAnalyzer:
         if api_key_tavily:
             os.environ["TAVILY_API_KEY"] = api_key_tavily
             
-        # Initialize the language model
+        # Initialize Google Gemini language model
         try:
             self.llm = init_chat_model("gemini/gemini-2.0-flash-exp", temperature=0)
             print("🤖 Google Gemini LLM initialized!")
         except Exception as e:
-            print(f"⚠️ Error initializing Gemini: {e}")
-            try:
-                self.llm = init_chat_model("gpt-3.5-turbo", temperature=0)
-                print("🤖 OpenAI GPT-3.5 LLM initialized as fallback!")
-            except Exception as e2:
-                print(f"❌ Error initializing LLM: {e2}")
-                print("💡 Please ensure you have a valid API key configured")
-                raise
+            print(f"❌ Error initializing Google Gemini: {e}")
+            print("💡 Please ensure you have set GOOGLE_API_KEY environment variable")
+            print("💡 Get your API key from: https://aistudio.google.com/app/apikey")
+            raise
                 
         # Auto-detect and load data
         self.auto_detect_and_load_data()

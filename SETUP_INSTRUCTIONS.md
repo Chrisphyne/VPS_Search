@@ -26,19 +26,15 @@
 
 ## 🚀 Quick Start Guide
 
-### **Step 1: Set Up API Keys**
+### **Step 1: Set Up Google Gemini API Key**
 
-The system supports multiple LLM providers. Choose one:
+This system uses Google Gemini for optimal performance with your Kenya sugar data:
 
-#### **Option A: Google Gemini (Recommended)**
 ```bash
 export GOOGLE_API_KEY="your-google-gemini-api-key"
 ```
 
-#### **Option B: OpenAI**  
-```bash
-export OPENAI_API_KEY="your-openai-api-key"
-```
+**Get your free API key from:** [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ### **Step 2: Run the System**
 
