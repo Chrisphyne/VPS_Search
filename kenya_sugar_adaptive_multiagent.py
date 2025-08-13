@@ -676,6 +676,20 @@ with industry context and global best practices.
                     "- If available, show kenyan_sugar_weekly_factory_agg_df.shape, head(3)\n"
                     "- List counts of unique factories and regions from the main DataFrame\n"
                 )
+            # Guided: region efficiency ranking
+            elif ("region" in lower_q or "regions" in lower_q) and any(kw in lower_q for kw in ["highest", "best", "top", "efficiency", "rank", "ranking", "compare"]):
+                guided_query = (
+                    "Analyze ONLY local DataFrames to rank regions by production efficiency for last year.\n"
+                    "Use `kenyan_sugar_weekly_factory_df`. Columns include: 'year', 'region', 'sucrose content', 'Crop Yield (tonnes/ha)', 'Production Quantity (tonnes)'.\n"
+                    "Steps:\n"
+                    "1) last_year = kenyan_sugar_weekly_factory_df['year'].max()\n"
+                    "2) df_last = kenyan_sugar_weekly_factory_df[kenyan_sugar_weekly_factory_df['year'] == last_year]\n"
+                    "3) Group by region to compute: mean sucrose, mean yield t/ha, total production tonnes\n"
+                    "4) Standardize each metric with z = (x - x.mean()) / x.std(ddof=0)\n"
+                    "5) region_score = z(mean sucrose) + z(mean yield t/ha) + z(total production)\n"
+                    "6) Output a markdown table of TOP 8 regions sorted by region_score desc with columns: rank, region, mean sucrose %, mean yield t/ha, total production t, region_score (2 decimals)\n"
+                    "7) Add 2 concise bullet insights\n"
+                )
             result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": guided_query}]})
             content = result['messages'][-1].content
             print(content)

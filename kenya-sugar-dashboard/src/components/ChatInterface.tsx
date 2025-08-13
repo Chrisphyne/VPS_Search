@@ -23,10 +23,15 @@ export default function ChatInterface() {
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [hydrated, setHydrated] = useState(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
@@ -189,7 +194,7 @@ export default function ChatInterface() {
               <div className={`text-xs mt-1 ${
                 message.sender === 'user' ? 'text-green-100' : 'text-gray-500'
               }`}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {hydrated ? message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
               </div>
             </div>
           </div>
