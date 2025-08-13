@@ -9,16 +9,20 @@ export async function POST(request: NextRequest) {
     
     const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'
     
-    // Simulate calling your Python multi-agent system
-    // In production, this would be:
-    // const response = await fetch(`${pythonBackendUrl}/analyze`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ query: message, type: queryType })
-    // })
-    
-    // For demo purposes, return structured response based on query type
-    const response = await generateAIResponse(message, queryType)
+    // Call Python multi-agent backend
+    const response = await fetch(`${pythonBackendUrl}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: message, type: queryType })
+    }).then(async (r) => {
+      if (!r.ok) throw new Error(`Backend error: ${r.status}`)
+      const data = await r.json()
+      if (!data.success) throw new Error(data.response || 'Backend returned error')
+      return data.response as string
+    }).catch(async (err) => {
+      console.warn('Backend unavailable, using local mock. Error:', err?.message || err)
+      return await generateAIResponse(message, queryType)
+    })
     
     return NextResponse.json({ 
       success: true, 

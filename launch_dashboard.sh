@@ -4,17 +4,27 @@
 echo "🇰🇪 KENYA SUGAR BOARD DASHBOARD LAUNCHER"
 echo "========================================="
 
-# Set API keys
-export GOOGLE_API_KEY="AIzaSyCefrCL_4j6SUdLhuUp94BXso64DS4qK0g"
-export TAVILY_API_KEY="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"
+# Set API keys (consider moving to .env in production)
+export GOOGLE_API_KEY="${GOOGLE_API_KEY:-AIzaSyCefrCL_4j6SUdLhuUp94BXso64DS4qK0g}"
+export TAVILY_API_KEY="${TAVILY_API_KEY:-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}"
+
+# Configure backend URL for Next.js
+export PYTHON_BACKEND_URL="${PYTHON_BACKEND_URL:-http://localhost:8000}"
 
 echo "🔑 API keys configured"
+echo "🔌 PYTHON_BACKEND_URL=${PYTHON_BACKEND_URL}"
 
 # Function to start Python backend
 start_python_backend() {
-    echo "🐍 Starting Python Multi-Agent Backend..."
-    source rag_env/bin/activate
-    python kenya_sugar_adaptive_multiagent.py &
+    echo "🐍 Starting Python Multi-Agent Backend (FastAPI)..."
+    if [ -d "rag_env" ]; then
+        source rag_env/bin/activate
+    elif [ -d ".venv" ]; then
+        source .venv/bin/activate
+    fi
+    # Install deps if missing (best-effort)
+    python -m pip install -r requirements.txt >/dev/null 2>&1 || true
+    uvicorn kenya_sugar_api:app --host 0.0.0.0 --port 8000 --workers 1 &
     PYTHON_PID=$!
     echo "✅ Python backend started (PID: $PYTHON_PID)"
 }
@@ -22,7 +32,11 @@ start_python_backend() {
 # Function to start Next.js frontend
 start_nextjs_frontend() {
     echo "⚛️ Starting Next.js Dashboard..."
-    cd kenya-sugar-dashboard
+    cd kenya-sugar-dashboard || exit 1
+    # Ensure deps
+    npm ci --no-audit --no-fund >/dev/null 2>&1 || npm install --no-audit --no-fund >/dev/null 2>&1
+    # Export backend URL to Next env for server runtime
+    export PYTHON_BACKEND_URL
     npm run dev &
     NEXTJS_PID=$!
     echo "✅ Next.js dashboard started (PID: $NEXTJS_PID)"
@@ -51,13 +65,6 @@ cleanup() {
 # Set trap to cleanup on script exit
 trap cleanup EXIT INT TERM
 
-# Check if virtual environment exists
-if [ ! -d "rag_env" ]; then
-    echo "❌ Virtual environment 'rag_env' not found"
-    echo "💡 Please set up the Python environment first"
-    exit 1
-fi
-
 # Check if Next.js project exists
 if [ ! -d "kenya-sugar-dashboard" ]; then
     echo "❌ Next.js dashboard directory not found"
@@ -75,7 +82,7 @@ sleep 5  # Give Next.js time to start
 echo ""
 echo "🎉 SERVICES RUNNING:"
 echo "📊 Dashboard UI: http://localhost:3000"
-echo "🤖 Python Backend: Running with multi-agent system"
+echo "🤖 Python Backend: ${PYTHON_BACKEND_URL}"
 echo ""
 echo "💡 Features available:"
 echo "   - Interactive dashboard with Kenya Sugar Board data"
