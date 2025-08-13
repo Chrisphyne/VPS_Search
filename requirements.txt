@@ -30,6 +30,7 @@ pydantic>=2.11.7
 pandas
 langchain_experimental
 langchain_tavily
+tabulate
 
 # HTTP client
 httpx>=0.28.1

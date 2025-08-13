@@ -324,7 +324,23 @@ class AdaptiveKenyaSugarAnalyzer:
             if TavilySearchResults is not None:
                 self.tavily_tool = TavilySearchResults(
                     max_results=5,
-                    include_domains=["wikipedia.org", "britannica.com", "fao.org", "worldbank.org", "business.co.ke"],
+                    include_domains=[
+                        ##GLOBAL
+                        "wikipedia.org",
+                        "britannica.com",
+                        "fao.org",
+                        "worldbank.org",
+                        "business.co.ke",
+                        #KSB
+                        "ksb.go.ke",
+                        "ksb.go.ke/resource-centre/",
+                        "ksb.go.ke/updates/",
+                        "fas.usda.gov",
+                        "apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Sugar+Annual_Nairobi_Kenya_KE2025-0008.pdf",
+                        "ieakenya.or.ke/number_of_the_week/kenyas-sugar-industry/",
+
+
+                        ],
                     exclude_domains=["youtube.com", "tiktok.com"],
                 )
                 print("✅ Tavily search tool initialized")
