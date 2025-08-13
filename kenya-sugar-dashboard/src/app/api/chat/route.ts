@@ -10,24 +10,18 @@ export async function POST(request: NextRequest) {
     const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:7400'
     
     // Call Python multi-agent backend
-    let response = await fetch(`${pythonBackendUrl}/analyze`, {
+    // Always return backend message to the UI (even if backend marks success=false)
+    const { response, success: backendSuccess } = await fetch(`${pythonBackendUrl}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: message, type: queryType })
     }).then(async (r) => {
-      if (!r.ok) throw new Error(`Backend error: ${r.status}`)
-      const data = await r.json()
-      if (!data.success) throw new Error(data.response || 'Backend returned error')
-      return (data.response as string) || ''
-    }).catch(async (err) => {
-      console.warn('Backend unavailable, using local mock. Error:', err?.message || err)
-      return ''
+      const data = await r.json().catch(() => ({ success: false, response: 'Invalid JSON from backend.' }))
+      return { response: (data?.response as string) || 'No response from backend.', success: !!data?.success }
+    }).catch((err) => {
+      const msg = `Cannot reach backend at ${pythonBackendUrl}. Please ensure the backend is running on 127.0.0.1:7400.`
+      return { response: msg, success: false }
     })
-
-    if (!response || !response.trim()) {
-      // Fallback to local mock if backend returned empty message
-      response = await generateAIResponse(message, queryType)
-    }
     
     return NextResponse.json({ 
       success: true, 

@@ -325,22 +325,37 @@ class AdaptiveKenyaSugarAnalyzer:
                 self.tavily_tool = TavilySearchResults(
                     max_results=5,
                     include_domains=[
-                        ##GLOBAL
-                        "wikipedia.org",
-                        "britannica.com",
-                        "fao.org",
-                        "worldbank.org",
-                        "business.co.ke",
-                        #KSB
+                        # Government & Regulatory
                         "ksb.go.ke",
                         "ksb.go.ke/resource-centre/",
                         "ksb.go.ke/updates/",
+                        "kilimo.go.ke",
+                        "kilimo.go.ke/category/publications/",
+                        "kilimo.go.ke/category/statistics-reports/",
+                        "agricultureauthority.go.ke",
+                        "agricultureauthority.go.ke/our-publications/",
+                        "agricultureauthority.go.ke/news-updates/",
+                        "knbs.or.ke",
+                        "knbs.or.ke/?page_id=3142",
+                        # International & Open Data
+                        "faostat.fao.org",
+                        "fao.org/kenya/en/",
+                        "fao.org/faostat/en/#data/QC",
+                        "worldbank.org/en/country/kenya",
+                        "data.worldbank.org/country/kenya",
+                        "fao.org/statistics",
+                        "fao.org/kenya/resources/en/",
+                        "africaopendata.org/dataset/kenya-sugar-production-statistics",
                         "fas.usda.gov",
+                        "apps.fas.usda.gov/gainpublic",
                         "apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Sugar+Annual_Nairobi_Kenya_KE2025-0008.pdf",
+                        # News & Market Analysis (selective)
                         "ieakenya.or.ke/number_of_the_week/kenyas-sugar-industry/",
-
-
-                        ],
+                        "businessdailyafrica.com",
+                        "nation.africa",
+                        "standardmedia.co.ke",
+                        "agribusinessafrica.net",
+                    ],
                     exclude_domains=["youtube.com", "tiktok.com"],
                 )
                 print("✅ Tavily search tool initialized")

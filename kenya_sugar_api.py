@@ -96,35 +96,26 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResult:
         if qtype == "data":
             content = analyzer.quick_data_analysis(req.query)
             if not content or not str(content).strip() or str(content).lower().startswith("error"):
-                # Fallback to comprehensive analysis
-                result = analyzer.analyze(req.query)
-                if isinstance(result, dict):
-                    # Prefer synthesis
-                    if isinstance(result.get("synthesis"), str) and result["synthesis"].strip():
-                        return AnalyzeResult(success=True, response=result["synthesis"], type="comprehensive", status=result.get("status", "ok"))
-                    # Try messages
-                    messages = result.get("messages")
-                    if messages is not None:
-                        msg_content = _extract_messages_content(messages)
-                        if msg_content and msg_content.strip():
-                            return AnalyzeResult(success=True, response=msg_content, type="comprehensive", status=result.get("status", "ok"))
-                # Final fallback
-                return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="data", status="fallback")
+                friendly = (
+                    "I couldn't generate a data analysis response. Possible causes:\n"
+                    "- The LLM returned no content for this query\n"
+                    "- The query may be too vague\n"
+                    "- Backend configuration issue (e.g., GOOGLE_API_KEY)\n\n"
+                    "Try refining your question (add factory/region/time range) and try again."
+                )
+                return AnalyzeResult(success=False, response=friendly, type="data", status="no_content")
             return AnalyzeResult(success=True, response=str(content), type="data", status="ok")
         elif qtype == "research":
             content = analyzer.quick_research(req.query)
             if not content or not str(content).strip() or str(content).lower().startswith("error"):
-                # Fallback to comprehensive analysis
-                result = analyzer.analyze(req.query)
-                if isinstance(result, dict):
-                    if isinstance(result.get("synthesis"), str) and result["synthesis"].strip():
-                        return AnalyzeResult(success=True, response=result["synthesis"], type="comprehensive", status=result.get("status", "ok"))
-                    messages = result.get("messages")
-                    if messages is not None:
-                        msg_content = _extract_messages_content(messages)
-                        if msg_content and msg_content.strip():
-                            return AnalyzeResult(success=True, response=msg_content, type="comprehensive", status=result.get("status", "ok"))
-                return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="research", status="fallback")
+                friendly = (
+                    "I couldn't generate a research response. Possible causes:\n"
+                    "- The LLM returned no content for this query\n"
+                    "- The query may be too vague\n"
+                    "- Tavily API or configuration not available\n\n"
+                    "Try refining your question (be specific about topic/time/country) and try again."
+                )
+                return AnalyzeResult(success=False, response=friendly, type="research", status="no_content")
             return AnalyzeResult(success=True, response=str(content), type="research", status="ok")
         else:
             result = analyzer.analyze(req.query)
@@ -147,12 +138,26 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResult:
                         combined += f"Industry Research:\n{result['research']}\n\n"
                     if combined.strip():
                         return AnalyzeResult(success=True, response=combined.strip(), type="comprehensive", status=result.get("status", "ok"))
-                # Fallback to summary
-                return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="comprehensive", status="fallback")
+                # Friendly no-content response (no generated data)
+                friendly = (
+                    "I couldn't produce a comprehensive analysis. Possible causes:\n"
+                    "- The LLM returned no content for this query\n"
+                    "- The query may be too broad\n"
+                    "- Backend configuration issue (e.g., GOOGLE_API_KEY)\n\n"
+                    "Try adding more specifics (factory/region/timeframe) and try again."
+                )
+                return AnalyzeResult(success=False, response=friendly, type="comprehensive", status="no_content")
             else:
                 text = str(result or "").strip()
                 if not text:
-                    return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="comprehensive", status="fallback")
+                    friendly = (
+                        "I couldn't produce a comprehensive analysis. Possible causes:\n"
+                        "- The LLM returned no content for this query\n"
+                        "- The query may be too broad\n"
+                        "- Backend configuration issue (e.g., GOOGLE_API_KEY)\n\n"
+                        "Try adding more specifics (factory/region/timeframe) and try again."
+                    )
+                    return AnalyzeResult(success=False, response=friendly, type="comprehensive", status="no_content")
                 return AnalyzeResult(success=True, response=text, type="comprehensive", status="ok")
 
     except Exception as exc:
