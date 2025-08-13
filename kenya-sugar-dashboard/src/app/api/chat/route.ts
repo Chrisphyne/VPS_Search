@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     // Here you would call your Python backend
     // For now, we'll create a more sophisticated mock response
     
-    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:7400'
+    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:7400'
     
     // Call Python multi-agent backend
     let response = await fetch(`${pythonBackendUrl}/analyze`, {

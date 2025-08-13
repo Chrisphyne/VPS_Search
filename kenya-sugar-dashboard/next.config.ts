@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     allowedDevOrigins: [
       "http://localhost:7500",
       "http://127.0.0.1:7500",
+      // If you access UI via public IP/host, add it here for dev warning suppression
       "http://35.222.235.13:7500",
       "https://35.222.235.13:7500",
     ],

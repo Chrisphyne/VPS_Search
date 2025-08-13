@@ -19,7 +19,7 @@ export TAVILY_API_KEY=optional_key
 uvicorn kenya_sugar_api:app --host 0.0.0.0 --port 7400
 
 # Terminal 2 (kenya-sugar-dashboard)
-export PYTHON_BACKEND_URL=http://localhost:7400
+export PYTHON_BACKEND_URL=http://127.0.0.1:7400
 npm install
 npm run dev
 ```
