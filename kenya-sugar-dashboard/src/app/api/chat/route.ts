@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:7400'
     
     // Call Python multi-agent backend
-    const response = await fetch(`${pythonBackendUrl}/analyze`, {
+    let response = await fetch(`${pythonBackendUrl}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: message, type: queryType })
@@ -18,11 +18,16 @@ export async function POST(request: NextRequest) {
       if (!r.ok) throw new Error(`Backend error: ${r.status}`)
       const data = await r.json()
       if (!data.success) throw new Error(data.response || 'Backend returned error')
-      return data.response as string
+      return (data.response as string) || ''
     }).catch(async (err) => {
       console.warn('Backend unavailable, using local mock. Error:', err?.message || err)
-      return await generateAIResponse(message, queryType)
+      return ''
     })
+
+    if (!response || !response.trim()) {
+      // Fallback to local mock if backend returned empty message
+      response = await generateAIResponse(message, queryType)
+    }
     
     return NextResponse.json({ 
       success: true, 

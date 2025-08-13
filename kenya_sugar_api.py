@@ -76,6 +76,17 @@ def _extract_messages_content(messages: Any) -> str:
         return "No content returned from analyzer."
 
 
+def _build_fallback_message(query: str, analyzer: AdaptiveKenyaSugarAnalyzer) -> str:
+    try:
+        summary = analyzer.get_data_summary()
+    except Exception:
+        summary = "Kenya Sugar Board data available."
+    return (
+        f"I could not generate a detailed response for: '{query}'.\n\n"
+        f"Here is an overview of the datasets and sample queries you can try next:\n\n{summary}"
+    )
+
+
 @app.post("/analyze", response_model=AnalyzeResult)
 def analyze(req: AnalyzeRequest) -> AnalyzeResult:
     try:
@@ -84,21 +95,49 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResult:
 
         if qtype == "data":
             content = analyzer.quick_data_analysis(req.query)
-            return AnalyzeResult(success=True, response=content, type="data", status="ok")
+            if not content or not str(content).strip() or str(content).lower().startswith("error"):
+                # Fallback to comprehensive analysis
+                result = analyzer.analyze(req.query)
+                if isinstance(result, dict):
+                    # Prefer synthesis
+                    if isinstance(result.get("synthesis"), str) and result["synthesis"].strip():
+                        return AnalyzeResult(success=True, response=result["synthesis"], type="comprehensive", status=result.get("status", "ok"))
+                    # Try messages
+                    messages = result.get("messages")
+                    if messages is not None:
+                        msg_content = _extract_messages_content(messages)
+                        if msg_content and msg_content.strip():
+                            return AnalyzeResult(success=True, response=msg_content, type="comprehensive", status=result.get("status", "ok"))
+                # Final fallback
+                return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="data", status="fallback")
+            return AnalyzeResult(success=True, response=str(content), type="data", status="ok")
         elif qtype == "research":
             content = analyzer.quick_research(req.query)
-            return AnalyzeResult(success=True, response=content, type="research", status="ok")
+            if not content or not str(content).strip() or str(content).lower().startswith("error"):
+                # Fallback to comprehensive analysis
+                result = analyzer.analyze(req.query)
+                if isinstance(result, dict):
+                    if isinstance(result.get("synthesis"), str) and result["synthesis"].strip():
+                        return AnalyzeResult(success=True, response=result["synthesis"], type="comprehensive", status=result.get("status", "ok"))
+                    messages = result.get("messages")
+                    if messages is not None:
+                        msg_content = _extract_messages_content(messages)
+                        if msg_content and msg_content.strip():
+                            return AnalyzeResult(success=True, response=msg_content, type="comprehensive", status=result.get("status", "ok"))
+                return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="research", status="fallback")
+            return AnalyzeResult(success=True, response=str(content), type="research", status="ok")
         else:
             result = analyzer.analyze(req.query)
             # Prefer 'synthesis' if present
             if isinstance(result, dict):
-                if "synthesis" in result and isinstance(result["synthesis"], str):
+                if "synthesis" in result and isinstance(result["synthesis"], str) and result["synthesis"].strip():
                     return AnalyzeResult(success=True, response=result["synthesis"], type="comprehensive", status=result.get("status", "ok"), meta={k: v for k, v in result.items() if k not in {"synthesis"}})
                 # Else try messages
                 messages = result.get("messages")
                 if messages is not None:
                     content = _extract_messages_content(messages)
-                    return AnalyzeResult(success=True, response=content, type="comprehensive", status=result.get("status", "ok"))
+                    if content and content.strip():
+                        return AnalyzeResult(success=True, response=content, type="comprehensive", status=result.get("status", "ok"))
                 # Else try data_analysis + research
                 if "data_analysis" in result or "research" in result:
                     combined = ""
@@ -106,11 +145,15 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResult:
                         combined += f"Data Analysis:\n{result['data_analysis']}\n\n"
                     if result.get("research"):
                         combined += f"Industry Research:\n{result['research']}\n\n"
-                    return AnalyzeResult(success=True, response=combined.strip(), type="comprehensive", status=result.get("status", "ok"))
-                # Fallback to string repr
-                return AnalyzeResult(success=True, response=str(result), type="comprehensive", status="ok")
+                    if combined.strip():
+                        return AnalyzeResult(success=True, response=combined.strip(), type="comprehensive", status=result.get("status", "ok"))
+                # Fallback to summary
+                return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="comprehensive", status="fallback")
             else:
-                return AnalyzeResult(success=True, response=str(result), type="comprehensive", status="ok")
+                text = str(result or "").strip()
+                if not text:
+                    return AnalyzeResult(success=True, response=_build_fallback_message(req.query, analyzer), type="comprehensive", status="fallback")
+                return AnalyzeResult(success=True, response=text, type="comprehensive", status="ok")
 
     except Exception as exc:
         # Return a friendly error but keep 200 so frontend can fallback gracefully
