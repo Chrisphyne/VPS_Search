@@ -23,10 +23,15 @@ export default function ChatInterface() {
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [hydrated, setHydrated] = useState(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
@@ -156,35 +161,15 @@ export default function ChatInterface() {
   return (
     <div className="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
       {/* Chat Header */}
-      <div className="bg-green-600 text-white p-4 rounded-t-lg flex items-center space-x-3">
-        <Bot className="h-6 w-6" />
-        <div>
-          <h3 className="font-semibold">Kenya Sugar Board AI Assistant</h3>
-          <p className="text-sm text-green-100">Powered by Google Gemini & Tavily Research</p>
-        </div>
-      </div>
-
-      {/* Suggested Queries */}
-      {messages.length === 1 && (
-        <div className="p-4 border-b">
-          <p className="text-sm text-gray-600 mb-3">Try asking about:</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {suggestedQueries.map((query, index) => {
-              const Icon = query.icon
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleSendMessage(query.text)}
-                  className="text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <Icon className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  <span className="text-sm text-gray-700">{query.text}</span>
-                </button>
-              )
-            })}
+      <div className="bg-green-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Bot className="h-6 w-6" />
+          <div>
+            <h3 className="font-semibold">Kenya Sugar Board AI Assistant</h3>
+            <p className="text-sm text-green-100">Powered by Google Gemini & Tavily Research</p>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -209,22 +194,47 @@ export default function ChatInterface() {
               <div className={`text-xs mt-1 ${
                 message.sender === 'user' ? 'text-green-100' : 'text-gray-500'
               }`}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {hydrated ? message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
               </div>
             </div>
           </div>
         ))}
-        
+
+        {/* Expandable thinking section */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 p-3 rounded-lg flex items-center space-x-2">
-              <Loader2 className="h-4 w-4 animate-spin text-green-600" />
-              <span className="text-gray-600">Analyzing your data...</span>
+            <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg w-full max-w-md">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+                <span className="text-gray-700 font-medium">Thinking…</span>
+              </div>
+              <details className="mt-2 text-sm text-gray-600">
+                <summary className="cursor-pointer select-none">Show details</summary>
+                <div className="mt-2">
+                  The AI is analyzing your data or performing research. This may take a few seconds depending on the query.
+                </div>
+              </details>
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
+      </div>
+
+      {/* Quick questions */}
+      <div className="px-4 pb-2">
+        <div className="text-xs text-gray-600 mb-2">Quick questions:</div>
+        <div className="flex flex-wrap gap-2">
+          {suggestedQueries.slice(0, 4).map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSendMessage(q.text)}
+              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-800 border border-gray-200"
+            >
+              {q.text}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Input */}
@@ -235,8 +245,8 @@ export default function ChatInterface() {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
-            placeholder="Ask about factory performance, regional analysis, global comparisons..."
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Ask about factory performance, regions, seasonal trends, or global comparisons…"
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black placeholder:text-gray-500"
             disabled={isLoading}
           />
           <button

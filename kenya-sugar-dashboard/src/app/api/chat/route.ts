@@ -7,18 +7,21 @@ export async function POST(request: NextRequest) {
     // Here you would call your Python backend
     // For now, we'll create a more sophisticated mock response
     
-    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'
+    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://127.0.0.1:7400'
     
-    // Simulate calling your Python multi-agent system
-    // In production, this would be:
-    // const response = await fetch(`${pythonBackendUrl}/analyze`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ query: message, type: queryType })
-    // })
-    
-    // For demo purposes, return structured response based on query type
-    const response = await generateAIResponse(message, queryType)
+    // Call Python multi-agent backend
+    // Always return backend message to the UI (even if backend marks success=false)
+    const { response, success: backendSuccess } = await fetch(`${pythonBackendUrl}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: message, type: queryType })
+    }).then(async (r) => {
+      const data = await r.json().catch(() => ({ success: false, response: 'Invalid JSON from backend.' }))
+      return { response: (data?.response as string) || 'No response from backend.', success: !!data?.success }
+    }).catch((err) => {
+      const msg = `Cannot reach backend at ${pythonBackendUrl}. Please ensure the backend is running on 127.0.0.1:7400.`
+      return { response: msg, success: false }
+    })
     
     return NextResponse.json({ 
       success: true, 

@@ -60,21 +60,25 @@ class AdaptiveKenyaSugarAnalyzer:
         if api_key_tavily:
             os.environ["TAVILY_API_KEY"] = api_key_tavily
             
-        # Initialize Google Gemini language model (using direct API, not Vertex AI)
+        # Initialize LLM with tool-calling support preferred via init_chat_model
         try:
-            from langchain_google_genai import ChatGoogleGenerativeAI
-            self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.0-flash-exp",
-                temperature=0,
-                google_api_key=os.getenv("GOOGLE_API_KEY")
-            )
-            print("🤖 Google Gemini LLM initialized!")
+            self.llm = init_chat_model("gemini/gemini-2.0-flash-exp", temperature=0)
+            print("🤖 Google Gemini LLM initialized via init_chat_model!")
         except Exception as e:
-            print(f"❌ Error initializing Google Gemini: {e}")
-            print("💡 Please ensure you have set GOOGLE_API_KEY environment variable")
-            print("💡 Get your API key from: https://aistudio.google.com/app/apikey")
-            print("💡 You may need to install: pip install langchain-google-genai")
-            raise
+            print(f"⚠️ init_chat_model failed: {e}")
+            try:
+                from langchain_google_genai import ChatGoogleGenerativeAI
+                self.llm = ChatGoogleGenerativeAI(
+                    model="gemini-2.0-flash-exp",
+                    temperature=0,
+                    google_api_key=os.getenv("GOOGLE_API_KEY")
+                )
+                print("🤖 Google Gemini LLM initialized via langchain-google-genai!")
+            except Exception as e2:
+                print(f"❌ Error initializing Google Gemini: {e2}")
+                print("💡 Ensure GOOGLE_API_KEY is set. Get your key: https://aistudio.google.com/app/apikey")
+                print("💡 You may need: pip install langchain-google-genai")
+                raise
                 
         # Auto-detect and load data
         self.auto_detect_and_load_data()
@@ -325,22 +329,37 @@ class AdaptiveKenyaSugarAnalyzer:
                 self.tavily_tool = TavilySearchResults(
                     max_results=5,
                     include_domains=[
-                        ##GLOBAL
-                        "wikipedia.org",
-                        "britannica.com",
-                        "fao.org",
-                        "worldbank.org",
-                        "business.co.ke",
-                        #KSB
+                        # Government & Regulatory
                         "ksb.go.ke",
                         "ksb.go.ke/resource-centre/",
                         "ksb.go.ke/updates/",
+                        "kilimo.go.ke",
+                        "kilimo.go.ke/category/publications/",
+                        "kilimo.go.ke/category/statistics-reports/",
+                        "agricultureauthority.go.ke",
+                        "agricultureauthority.go.ke/our-publications/",
+                        "agricultureauthority.go.ke/news-updates/",
+                        "knbs.or.ke",
+                        "knbs.or.ke/?page_id=3142",
+                        # International & Open Data
+                        "faostat.fao.org",
+                        "fao.org/kenya/en/",
+                        "fao.org/faostat/en/#data/QC",
+                        "worldbank.org/en/country/kenya",
+                        "data.worldbank.org/country/kenya",
+                        "fao.org/statistics",
+                        "fao.org/kenya/resources/en/",
+                        "africaopendata.org/dataset/kenya-sugar-production-statistics",
                         "fas.usda.gov",
+                        "apps.fas.usda.gov/gainpublic",
                         "apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Sugar+Annual_Nairobi_Kenya_KE2025-0008.pdf",
+                        # News & Market Analysis (selective)
                         "ieakenya.or.ke/number_of_the_week/kenyas-sugar-industry/",
-
-
-                        ],
+                        "businessdailyafrica.com",
+                        "nation.africa",
+                        "standardmedia.co.ke",
+                        "agribusinessafrica.net",
+                    ],
                     exclude_domains=["youtube.com", "tiktok.com"],
                 )
                 print("✅ Tavily search tool initialized")
@@ -601,7 +620,77 @@ with industry context and global best practices.
     def quick_data_analysis(self, query: str) -> str:
         """Quick data analysis using only the data retriever agent"""
         try:
-            result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": query}]})
+            guided_query = query
+            lower_q = (query or "").lower()
+            # Guided: ranking/efficiency
+            if any(kw in lower_q for kw in ["rank", "ranking", "ranks", "top", "best", "highest", "efficiency"]) and any(kw in lower_q for kw in ["factory", "factories"]):
+                guided_query = (
+                    "Analyze ONLY local DataFrames to rank factories by production efficiency for last year.\n"
+                    "DataFrame to use: `kenyan_sugar_weekly_factory_df`. Columns include: 'year', 'week', 'region', 'factory', 'sucrose content', 'Crop Yield (tonnes/ha)', 'Production Quantity (tonnes)'.\n"
+                    "Steps:\n"
+                    "1) Define last_year = kenyan_sugar_weekly_factory_df['year'].max().\n"
+                    "2) Filter df_last = kenyan_sugar_weekly_factory_df[kenyan_sugar_weekly_factory_df['year'] == last_year].\n"
+                    "3) Compute per-factory metrics in df_last:\n"
+                    "   - mean_sucrose = mean of 'sucrose content'\n"
+                    "   - mean_yield = mean of 'Crop Yield (tonnes/ha)'\n"
+                    "   - total_production = sum of 'Production Quantity (tonnes)'\n"
+                    "4) Standardize each metric: z = (x - x.mean()) / x.std(ddof=0).\n"
+                    "5) performance_score = z(mean_sucrose) + z(mean_yield) + z(total_production).\n"
+                    "6) Determine a representative region per factory as the region with highest total production in df_last.\n"
+                    "7) Produce a markdown table of the TOP 10 factories sorted by performance_score desc with columns: rank, factory, region, mean sucrose %, mean yield t/ha, total production t, performance_score (2 decimals).\n"
+                    "8) Use only pandas; do not import external libraries.\n"
+                    "9) After the table, add 2-3 concise bullet insights.\n\n"
+                    f"User request: {query}"
+                )
+            # Guided: list factories
+            elif ("factory" in lower_q or "factories" in lower_q) and any(kw in lower_q for kw in ["list", "show", "what are", "give me", "names", "all"]):
+                guided_query = (
+                    "Using ONLY the local DataFrame `kenyan_sugar_weekly_factory_df` (columns include 'factory'),\n"
+                    "return a markdown bullet list of all unique factories sorted alphabetically, and the total count.\n"
+                    "Do not perform web research.\n"
+                )
+            # Guided: regions count or list
+            elif "region" in lower_q and any(kw in lower_q for kw in ["how many", "count", "number of"]):
+                guided_query = (
+                    "Using ONLY `kenyan_sugar_weekly_factory_df`, compute the number of unique regions in column 'region' and return: \n"
+                    "- A single line: 'Regions: <count>'\n"
+                    "- Then a sorted comma-separated list of region names.\n"
+                    "No external research.\n"
+                )
+            elif ("region" in lower_q or "regions" in lower_q) and any(kw in lower_q for kw in ["list", "show", "what are", "give me", "names", "all"]):
+                guided_query = (
+                    "Using ONLY `kenyan_sugar_weekly_factory_df`, list all unique regions from column 'region' as a markdown bullet list, sorted alphabetically, and include the total count.\n"
+                    "No external research.\n"
+                )
+            # Guided: show columns/schema
+            elif any(kw in lower_q for kw in ["columns", "schema", "fields", "headers"]):
+                guided_query = (
+                    "Show a markdown bullet list of column names for BOTH DataFrames that exist in locals: `kenyan_sugar_weekly_factory_df` and `kenyan_sugar_weekly_factory_agg_df` (if present).\n"
+                    "For each DataFrame, also show the shape as '<rows> x <cols>'.\n"
+                )
+            # Guided: summary/head
+            elif any(kw in lower_q for kw in ["summary", "data summary", "overview", "head", "sample"]):
+                guided_query = (
+                    "Provide a concise data summary using ONLY local DataFrames: \n"
+                    "- Show kenyan_sugar_weekly_factory_df.shape, head(3) as a markdown table\n"
+                    "- If available, show kenyan_sugar_weekly_factory_agg_df.shape, head(3)\n"
+                    "- List counts of unique factories and regions from the main DataFrame\n"
+                )
+            # Guided: region efficiency ranking
+            elif ("region" in lower_q or "regions" in lower_q) and any(kw in lower_q for kw in ["highest", "best", "top", "efficiency", "rank", "ranking", "compare"]):
+                guided_query = (
+                    "Analyze ONLY local DataFrames to rank regions by production efficiency for last year.\n"
+                    "Use `kenyan_sugar_weekly_factory_df`. Columns include: 'year', 'region', 'sucrose content', 'Crop Yield (tonnes/ha)', 'Production Quantity (tonnes)'.\n"
+                    "Steps:\n"
+                    "1) last_year = kenyan_sugar_weekly_factory_df['year'].max()\n"
+                    "2) df_last = kenyan_sugar_weekly_factory_df[kenyan_sugar_weekly_factory_df['year'] == last_year]\n"
+                    "3) Group by region to compute: mean sucrose, mean yield t/ha, total production tonnes\n"
+                    "4) Standardize each metric with z = (x - x.mean()) / x.std(ddof=0)\n"
+                    "5) region_score = z(mean sucrose) + z(mean yield t/ha) + z(total production)\n"
+                    "6) Output a markdown table of TOP 8 regions sorted by region_score desc with columns: rank, region, mean sucrose %, mean yield t/ha, total production t, region_score (2 decimals)\n"
+                    "7) Add 2 concise bullet insights\n"
+                )
+            result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": guided_query}]})
             content = result['messages'][-1].content
             print(content)
             return content

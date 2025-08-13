@@ -26,7 +26,7 @@ python kenya_sugar_adaptive_multiagent.py
 
 # Terminal 2: Start Next.js Dashboard
 cd kenya-sugar-dashboard
-npm run dev
+PORT=7500 npm run dev
 ```
 
 ## 📊 **Dashboard Features**
