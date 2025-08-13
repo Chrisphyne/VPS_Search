@@ -9,7 +9,7 @@ export GOOGLE_API_KEY="${GOOGLE_API_KEY:-AIzaSyCefrCL_4j6SUdLhuUp94BXso64DS4qK0g
 export TAVILY_API_KEY="${TAVILY_API_KEY:-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}"
 
 # Configure backend URL for Next.js
-export PYTHON_BACKEND_URL="${PYTHON_BACKEND_URL:-http://localhost:8000}"
+export PYTHON_BACKEND_URL="${PYTHON_BACKEND_URL:-http://localhost:7400}"
 
 echo "🔑 API keys configured"
 echo "🔌 PYTHON_BACKEND_URL=${PYTHON_BACKEND_URL}"
@@ -24,7 +24,7 @@ start_python_backend() {
     fi
     # Install deps if missing (best-effort)
     python -m pip install -r requirements.txt >/dev/null 2>&1 || true
-    uvicorn kenya_sugar_api:app --host 0.0.0.0 --port 8000 --workers 1 &
+    uvicorn kenya_sugar_api:app --host 0.0.0.0 --port 7400 --workers 1 &
     PYTHON_PID=$!
     echo "✅ Python backend started (PID: $PYTHON_PID)"
 }
@@ -37,7 +37,7 @@ start_nextjs_frontend() {
     npm ci --no-audit --no-fund >/dev/null 2>&1 || npm install --no-audit --no-fund >/dev/null 2>&1
     # Export backend URL to Next env for server runtime
     export PYTHON_BACKEND_URL
-    npm run dev &
+    npm run dev -- -p 7500 &
     NEXTJS_PID=$!
     echo "✅ Next.js dashboard started (PID: $NEXTJS_PID)"
     cd ..
@@ -81,7 +81,7 @@ sleep 5  # Give Next.js time to start
 
 echo ""
 echo "🎉 SERVICES RUNNING:"
-echo "📊 Dashboard UI: http://localhost:3000"
+echo "📊 Dashboard UI: http://localhost:7500"
 echo "🤖 Python Backend: ${PYTHON_BACKEND_URL}"
 echo ""
 echo "💡 Features available:"

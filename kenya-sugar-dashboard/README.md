@@ -16,10 +16,10 @@ This Next.js dashboard connects to a Python FastAPI backend that wraps the Adapt
 # Terminal 1 (root)
 export GOOGLE_API_KEY=your_key
 export TAVILY_API_KEY=optional_key
-uvicorn kenya_sugar_api:app --host 0.0.0.0 --port 8000
+uvicorn kenya_sugar_api:app --host 0.0.0.0 --port 7400
 
 # Terminal 2 (kenya-sugar-dashboard)
-export PYTHON_BACKEND_URL=http://localhost:8000
+export PYTHON_BACKEND_URL=http://localhost:7400
 npm install
 npm run dev
 ```
