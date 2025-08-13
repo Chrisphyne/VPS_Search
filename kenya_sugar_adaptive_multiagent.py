@@ -622,6 +622,7 @@ with industry context and global best practices.
         try:
             guided_query = query
             lower_q = (query or "").lower()
+            # Guided: ranking/efficiency
             if any(kw in lower_q for kw in ["rank", "ranking", "ranks", "top", "best", "highest", "efficiency"]) and any(kw in lower_q for kw in ["factory", "factories"]):
                 guided_query = (
                     "Analyze ONLY local DataFrames to rank factories by production efficiency for last year.\n"
@@ -640,6 +641,40 @@ with industry context and global best practices.
                     "8) Use only pandas; do not import external libraries.\n"
                     "9) After the table, add 2-3 concise bullet insights.\n\n"
                     f"User request: {query}"
+                )
+            # Guided: list factories
+            elif ("factory" in lower_q or "factories" in lower_q) and any(kw in lower_q for kw in ["list", "show", "what are", "give me", "names", "all"]):
+                guided_query = (
+                    "Using ONLY the local DataFrame `kenyan_sugar_weekly_factory_df` (columns include 'factory'),\n"
+                    "return a markdown bullet list of all unique factories sorted alphabetically, and the total count.\n"
+                    "Do not perform web research.\n"
+                )
+            # Guided: regions count or list
+            elif "region" in lower_q and any(kw in lower_q for kw in ["how many", "count", "number of"]):
+                guided_query = (
+                    "Using ONLY `kenyan_sugar_weekly_factory_df`, compute the number of unique regions in column 'region' and return: \n"
+                    "- A single line: 'Regions: <count>'\n"
+                    "- Then a sorted comma-separated list of region names.\n"
+                    "No external research.\n"
+                )
+            elif ("region" in lower_q or "regions" in lower_q) and any(kw in lower_q for kw in ["list", "show", "what are", "give me", "names", "all"]):
+                guided_query = (
+                    "Using ONLY `kenyan_sugar_weekly_factory_df`, list all unique regions from column 'region' as a markdown bullet list, sorted alphabetically, and include the total count.\n"
+                    "No external research.\n"
+                )
+            # Guided: show columns/schema
+            elif any(kw in lower_q for kw in ["columns", "schema", "fields", "headers"]):
+                guided_query = (
+                    "Show a markdown bullet list of column names for BOTH DataFrames that exist in locals: `kenyan_sugar_weekly_factory_df` and `kenyan_sugar_weekly_factory_agg_df` (if present).\n"
+                    "For each DataFrame, also show the shape as '<rows> x <cols>'.\n"
+                )
+            # Guided: summary/head
+            elif any(kw in lower_q for kw in ["summary", "data summary", "overview", "head", "sample"]):
+                guided_query = (
+                    "Provide a concise data summary using ONLY local DataFrames: \n"
+                    "- Show kenyan_sugar_weekly_factory_df.shape, head(3) as a markdown table\n"
+                    "- If available, show kenyan_sugar_weekly_factory_agg_df.shape, head(3)\n"
+                    "- List counts of unique factories and regions from the main DataFrame\n"
                 )
             result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": guided_query}]})
             content = result['messages'][-1].content
