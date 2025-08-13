@@ -60,21 +60,25 @@ class AdaptiveKenyaSugarAnalyzer:
         if api_key_tavily:
             os.environ["TAVILY_API_KEY"] = api_key_tavily
             
-        # Initialize Google Gemini language model (using direct API, not Vertex AI)
+        # Initialize LLM with tool-calling support preferred via init_chat_model
         try:
-            from langchain_google_genai import ChatGoogleGenerativeAI
-            self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.0-flash-exp",
-                temperature=0,
-                google_api_key=os.getenv("GOOGLE_API_KEY")
-            )
-            print("🤖 Google Gemini LLM initialized!")
+            self.llm = init_chat_model("gemini/gemini-2.0-flash-exp", temperature=0)
+            print("🤖 Google Gemini LLM initialized via init_chat_model!")
         except Exception as e:
-            print(f"❌ Error initializing Google Gemini: {e}")
-            print("💡 Please ensure you have set GOOGLE_API_KEY environment variable")
-            print("💡 Get your API key from: https://aistudio.google.com/app/apikey")
-            print("💡 You may need to install: pip install langchain-google-genai")
-            raise
+            print(f"⚠️ init_chat_model failed: {e}")
+            try:
+                from langchain_google_genai import ChatGoogleGenerativeAI
+                self.llm = ChatGoogleGenerativeAI(
+                    model="gemini-2.0-flash-exp",
+                    temperature=0,
+                    google_api_key=os.getenv("GOOGLE_API_KEY")
+                )
+                print("🤖 Google Gemini LLM initialized via langchain-google-genai!")
+            except Exception as e2:
+                print(f"❌ Error initializing Google Gemini: {e2}")
+                print("💡 Ensure GOOGLE_API_KEY is set. Get your key: https://aistudio.google.com/app/apikey")
+                print("💡 You may need: pip install langchain-google-genai")
+                raise
                 
         # Auto-detect and load data
         self.auto_detect_and_load_data()
@@ -616,7 +620,19 @@ with industry context and global best practices.
     def quick_data_analysis(self, query: str) -> str:
         """Quick data analysis using only the data retriever agent"""
         try:
-            result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": query}]})
+            guided_query = query
+            lower_q = (query or "").lower()
+            if any(kw in lower_q for kw in ["rank", "ranking", "ranks", "top", "best"]) and any(kw in lower_q for kw in ["factory", "factories"]):
+                guided_query = (
+                    "You must analyze ONLY the local datasets to rank factories by performance.\n"
+                    "- Define last year as max(Year) in the dataset or Year==2024 if present.\n"
+                    "- Compute a performance score using: zscore(mean sucrose content) + zscore(yield per hectare) + zscore(total production quantity).\n"
+                    "- Show a table of the top 10 factories with: rank, factory, region, mean sucrose % (last year), mean yield t/ha (last year), total production t (last year), and the computed score.\n"
+                    "- DO NOT perform web research; use only the provided DataFrames.\n"
+                    "- Output concise markdown; include numeric values.\n\n"
+                    f"User request: {query}"
+                )
+            result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": guided_query}]})
             content = result['messages'][-1].content
             print(content)
             return content
