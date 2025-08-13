@@ -622,14 +622,23 @@ with industry context and global best practices.
         try:
             guided_query = query
             lower_q = (query or "").lower()
-            if any(kw in lower_q for kw in ["rank", "ranking", "ranks", "top", "best"]) and any(kw in lower_q for kw in ["factory", "factories"]):
+            if any(kw in lower_q for kw in ["rank", "ranking", "ranks", "top", "best", "highest", "efficiency"]) and any(kw in lower_q for kw in ["factory", "factories"]):
                 guided_query = (
-                    "You must analyze ONLY the local datasets to rank factories by performance.\n"
-                    "- Define last year as max(Year) in the dataset or Year==2024 if present.\n"
-                    "- Compute a performance score using: zscore(mean sucrose content) + zscore(yield per hectare) + zscore(total production quantity).\n"
-                    "- Show a table of the top 10 factories with: rank, factory, region, mean sucrose % (last year), mean yield t/ha (last year), total production t (last year), and the computed score.\n"
-                    "- DO NOT perform web research; use only the provided DataFrames.\n"
-                    "- Output concise markdown; include numeric values.\n\n"
+                    "Analyze ONLY local DataFrames to rank factories by production efficiency for last year.\n"
+                    "DataFrame to use: `kenyan_sugar_weekly_factory_df`. Columns include: 'year', 'week', 'region', 'factory', 'sucrose content', 'Crop Yield (tonnes/ha)', 'Production Quantity (tonnes)'.\n"
+                    "Steps:\n"
+                    "1) Define last_year = kenyan_sugar_weekly_factory_df['year'].max().\n"
+                    "2) Filter df_last = kenyan_sugar_weekly_factory_df[kenyan_sugar_weekly_factory_df['year'] == last_year].\n"
+                    "3) Compute per-factory metrics in df_last:\n"
+                    "   - mean_sucrose = mean of 'sucrose content'\n"
+                    "   - mean_yield = mean of 'Crop Yield (tonnes/ha)'\n"
+                    "   - total_production = sum of 'Production Quantity (tonnes)'\n"
+                    "4) Standardize each metric: z = (x - x.mean()) / x.std(ddof=0).\n"
+                    "5) performance_score = z(mean_sucrose) + z(mean_yield) + z(total_production).\n"
+                    "6) Determine a representative region per factory as the region with highest total production in df_last.\n"
+                    "7) Produce a markdown table of the TOP 10 factories sorted by performance_score desc with columns: rank, factory, region, mean sucrose %, mean yield t/ha, total production t, performance_score (2 decimals).\n"
+                    "8) Use only pandas; do not import external libraries.\n"
+                    "9) After the table, add 2-3 concise bullet insights.\n\n"
                     f"User request: {query}"
                 )
             result = self.data_retriever_agent.invoke({"messages": [{"role": "user", "content": guided_query}]})
