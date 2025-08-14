@@ -77,7 +77,7 @@ fi
 # Start the development server
 echo ""
 echo "🚀 Starting Next.js development server..."
-echo "🌐 The UI will be available at: http://localhost:3000"
+echo "🌐 The UI will be available at: http://localhost:7550"
 echo "⚡ Hot reloading enabled - changes will update automatically"
 echo "⏹️  Press Ctrl+C to stop the server"
 echo ""

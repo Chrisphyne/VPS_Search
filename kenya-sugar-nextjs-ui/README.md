@@ -33,7 +33,7 @@ npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`
+The application will be available at `http://localhost:7550`
 
 ## 🔧 Configuration
 
@@ -134,7 +134,7 @@ vercel
 docker build -t kenya-sugar-ui .
 
 # Run container
-docker run -p 3000:3000 -e API_BASE_URL=http://your-server:8000 kenya-sugar-ui
+docker run -p 7550:7550 -e API_BASE_URL=http://your-server:8000 kenya-sugar-ui
 ```
 
 ### Manual Deployment
@@ -160,7 +160,7 @@ The UI connects to the Kenya Sugar Analysis API with these endpoints:
 
 The interface is fully responsive and optimized for:
 - 📱 Mobile phones (320px+)
-- 📟 Tablets (768px+)
+- 📟 Tablets (768px+)  
 - 💻 Laptops (1024px+)
 - 🖥️ Desktop (1280px+)
 
