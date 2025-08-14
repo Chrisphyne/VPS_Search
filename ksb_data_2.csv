@@ -1,0 +1,31 @@
+Factory,Region,Year,Land Area (hectares),Processing Capacity (tonnes/day),Revenue (KES millions),Employment,Cane Farmers Registered
+Mumias Sugar Company,Western,2023,35000,6000,12500,3200,18500
+Mumias Sugar Company,Western,2024,36000,6200,13200,3350,19200
+Mumias Sugar Company,Western,2025,37000,6500,14000,3500,20000
+South Nyanza Sugar Company,Nyanza,2023,28000,4500,9800,2800,14500
+South Nyanza Sugar Company,Nyanza,2024,29000,4700,10300,2950,15200
+South Nyanza Sugar Company,Nyanza,2025,30000,5000,11000,3100,16000
+Chemelil Sugar Company,Nyanza,2023,32000,5200,11200,3000,16800
+Chemelil Sugar Company,Nyanza,2024,33000,5400,11800,3150,17500
+Chemelil Sugar Company,Nyanza,2025,34000,5600,12500,3300,18200
+Nzoia Sugar Company,Western,2023,29000,4800,10200,2900,15500
+Nzoia Sugar Company,Western,2024,30000,5000,10800,3050,16200
+Nzoia Sugar Company,Western,2025,31000,5200,11500,3200,17000
+Muhoroni Sugar Company,Nyanza,2023,25000,4200,8900,2500,13200
+Muhoroni Sugar Company,Nyanza,2024,26000,4400,9400,2650,13800
+Muhoroni Sugar Company,Nyanza,2025,27000,4600,10000,2800,14500
+Butali Sugar Mills,Western,2023,31000,5000,10800,2950,16200
+Butali Sugar Mills,Western,2024,32000,5200,11400,3100,16900
+Butali Sugar Mills,Western,2025,33000,5400,12100,3250,17600
+West Kenya Sugar Company,Western,2023,30000,4900,10400,2850,15800
+West Kenya Sugar Company,Western,2024,31000,5100,11000,3000,16500
+West Kenya Sugar Company,Western,2025,32000,5300,11700,3150,17200
+Kibos Sugar & Allied Industries,Nyanza,2023,28500,4700,10100,2750,15300
+Kibos Sugar & Allied Industries,Nyanza,2024,29500,4900,10700,2900,16000
+Kibos Sugar & Allied Industries,Nyanza,2025,30500,5100,11400,3050,16700
+Sukari Industries,Central,2023,22000,3800,8200,2200,11500
+Sukari Industries,Central,2024,23000,4000,8700,2350,12200
+Sukari Industries,Central,2025,24000,4200,9300,2500,12900
+Transmara Sugar Company,Rift Valley,2023,33000,5300,11500,3100,17200
+Transmara Sugar Company,Rift Valley,2024,34000,5500,12200,3250,18000
+Transmara Sugar Company,Rift Valley,2025,35000,5800,13000,3400,18800
