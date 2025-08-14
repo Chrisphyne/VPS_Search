@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenya Sugar Board Analysis System - Remote Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .server-config {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .config-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .config-group label {
+            font-weight: 500;
+            min-width: 120px;
+        }
+
+        .config-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .connect-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .connect-btn:hover {
+            background: #218838;
+        }
+
+        .status {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .status-item {
+            display: inline-block;
+            margin-right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .status-healthy { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-warning { background: #fff3cd; color: #856404; }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            width: 300px;
+            padding: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .conversation-history {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .ai-message {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            margin-right: auto;
+        }
+
+        .input-area {
+            background: #f8f9fa;
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #queryInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #queryInput:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .sample-queries {
+            margin-top: 20px;
+        }
+
+        .sample-query {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .sample-query:hover {
+            background: #e9ecef;
+            border-color: #007bff;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .conversation-info {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .conversation-info h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .conversation-id {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .server-url {
+            font-family: monospace;
+            background: #e7f3ff;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #0056b3;
+        }
+
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇰🇪 Kenya Sugar Board Analysis</h1>
+            <p>Remote Access - AI-Powered Data Analysis with Conversation Memory</p>
+        </div>
+
+        <div class="server-config">
+            <h4>🌐 Remote Server Configuration</h4>
+            <div class="config-group">
+                <label>Server IP:</label>
+                <input type="text" id="serverIP" placeholder="192.168.1.100 or your.domain.com" value="">
+                <label>Port:</label>
+                <input type="text" id="serverPort" placeholder="8000" value="8000" style="width: 100px;">
+                <button class="connect-btn" onclick="connectToServer()">Connect</button>
+            </div>
+            <div class="config-group">
+                <label>Full URL:</label>
+                <span class="server-url" id="fullServerURL">http://localhost:8000</span>
+            </div>
+        </div>
+
+        <div class="status" id="statusBar">
+            <span class="status-item status-warning">⏳ Configure server connection above</span>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="conversation-info">
+                    <h4>🌐 Connection Info</h4>
+                    <div>Server: <span class="server-url" id="currentServer">Not connected</span></div>
+                    <div style="margin-top: 10px;">ID: <span class="conversation-id" id="conversationId">remote_user_001</span></div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-secondary" onclick="clearConversation()" style="font-size: 0.8em; padding: 5px 12px;">Clear History</button>
+                    </div>
+                </div>
+
+                <div class="sample-queries">
+                    <h4>💡 Sample Queries</h4>
+                    <div class="sample-query" onclick="useQuery(this)">
+                        What are the key financial challenges facing Kenya's sugar sector?
+                    </div>
+                    <div class="sample-query" onclick="useQuery(this)">
+                        Compare production efficiency across different factories
+                    </div>
+                    <div class="sample-query" onclick="useQuery(this)">
+                        What are the main production challenges in the sugar industry?
+                    </div>
+                    <div class="sample-query" onclick="useQuery(this)">
+                        Which regions have the highest sugar production?
+                    </div>
+                    <div class="sample-query" onclick="useQuery(this)">
+                        Analyze seasonal patterns in sugar production
+                    </div>
+                    <div class="sample-query" onclick="useQuery(this)">
+                        Provide recommendations for improving factory efficiency
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-area" id="chatArea">
+                <div class="conversation-history" id="conversationHistory">
+                    <div class="ai-message">
+                        <strong>🤖 Kenya Sugar AI Assistant</strong><br>
+                        Welcome! Configure your remote server connection above, then ask me about:
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>Financial challenges and performance</li>
+                            <li>Production efficiency and trends</li>
+                            <li>Factory and regional comparisons</li>
+                            <li>Industry recommendations</li>
+                        </ul>
+                        <p style="margin-top: 10px; font-style: italic; color: #6c757d;">
+                            This conversation has memory - I'll remember our previous discussion!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    🤖 AI is analyzing your query...
+                </div>
+
+                <div class="input-area">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="queryInput" 
+                            placeholder="Configure server connection first..."
+                            onkeypress="handleKeyPress(event)"
+                            disabled
+                        >
+                        <button class="btn btn-primary" onclick="sendQuery()" id="sendBtn" disabled>Send</button>
+                        <button class="btn btn-secondary" onclick="testConnection()">Test</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let API_BASE = '';
+        let isConnected = false;
+        const conversationId = 'remote_user_001';
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateServerURL();
+            
+            // Try to detect server IP from URL if accessed remotely
+            const currentHost = window.location.hostname;
+            if (currentHost !== 'localhost' && currentHost !== '127.0.0.1' && currentHost !== '') {
+                document.getElementById('serverIP').value = currentHost;
+                updateServerURL();
+            }
+        });
+
+        function updateServerURL() {
+            const ip = document.getElementById('serverIP').value || 'localhost';
+            const port = document.getElementById('serverPort').value || '8000';
+            const url = `http://${ip}:${port}`;
+            
+            document.getElementById('fullServerURL').textContent = url;
+            API_BASE = url;
+        }
+
+        function connectToServer() {
+            updateServerURL();
+            testConnection();
+        }
+
+        async function testConnection() {
+            const statusBar = document.getElementById('statusBar');
+            const currentServer = document.getElementById('currentServer');
+            const chatArea = document.getElementById('chatArea');
+            const queryInput = document.getElementById('queryInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            statusBar.innerHTML = '<span class="status-item status-warning">🔄 Testing connection...</span>';
+
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    isConnected = true;
+                    statusBar.innerHTML = `
+                        <span class="status-item status-healthy">✅ Connected: ${data.status}</span>
+                        <span class="status-item status-healthy">🤖 Provider: ${data.llm_provider || 'Unknown'}</span>
+                        <span class="status-item status-healthy">📊 Version: ${data.version}</span>
+                    `;
+                    currentServer.textContent = API_BASE;
+                    chatArea.classList.remove('disabled');
+                    queryInput.disabled = false;
+                    queryInput.placeholder = "Ask about Kenya's sugar sector...";
+                    sendBtn.disabled = false;
+                    
+                    // Load conversation history
+                    loadConversationHistory();
+                    
+                    addMessage('🎉 Successfully connected to remote server! Ready for analysis.', 'ai', 'connected');
+                } else {
+                    throw new Error('Server responded but status not healthy');
+                }
+                
+            } catch (error) {
+                isConnected = false;
+                statusBar.innerHTML = `<span class="status-item status-error">❌ Cannot connect to ${API_BASE}</span>`;
+                currentServer.textContent = 'Connection failed';
+                chatArea.classList.add('disabled');
+                queryInput.disabled = true;
+                queryInput.placeholder = "Fix server connection first...";
+                sendBtn.disabled = true;
+                
+                addMessage(`❌ Connection failed: ${error.message}. Please check your server IP and port.`, 'ai', 'error');
+                console.error('Connection failed:', error);
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && isConnected) {
+                sendQuery();
+            }
+        }
+
+        function useQuery(element) {
+            if (isConnected) {
+                document.getElementById('queryInput').value = element.textContent.trim();
+                sendQuery();
+            }
+        }
+
+        async function sendQuery() {
+            if (!isConnected) {
+                alert('Please connect to server first');
+                return;
+            }
+
+            const input = document.getElementById('queryInput');
+            const query = input.value.trim();
+            
+            if (!query) return;
+
+            // Add user message to conversation
+            addMessage(query, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator(true);
+
+            try {
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        conversation_id: conversationId,
+                        type: 'comprehensive'
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Hide typing indicator
+                showTypingIndicator(false);
+
+                if (data.success) {
+                    addMessage(data.response, 'ai', data.status, data.provider);
+                } else {
+                    addMessage(data.response, 'ai', 'error');
+                }
+
+            } catch (error) {
+                showTypingIndicator(false);
+                addMessage(`Error: Could not connect to the analysis system. Please check your connection to ${API_BASE}`, 'ai', 'error');
+                console.error('Query failed:', error);
+            }
+        }
+
+        function addMessage(content, sender, status = null, provider = null) {
+            const historyDiv = document.getElementById('conversationHistory');
+            const messageDiv = document.createElement('div');
+            
+            if (sender === 'user') {
+                messageDiv.className = 'message user-message';
+                messageDiv.innerHTML = `<strong>👤 You:</strong><br>${content}`;
+            } else {
+                messageDiv.className = 'message ai-message';
+                let statusText = '';
+                if (status) {
+                    statusText = `<small style="color: #6c757d;">[${status}${provider ? ` via ${provider}` : ''}]</small><br>`;
+                }
+                messageDiv.innerHTML = `<strong>🤖 AI Assistant:</strong> ${statusText}<br>${formatResponse(content)}`;
+            }
+            
+            historyDiv.appendChild(messageDiv);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function formatResponse(content) {
+            // Basic markdown-like formatting
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>')
+                .replace(/- (.*?)(<br>|$)/g, '• $1$2');
+        }
+
+        function showTypingIndicator(show) {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.style.display = show ? 'block' : 'none';
+            
+            if (show) {
+                const historyDiv = document.getElementById('conversationHistory');
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            }
+        }
+
+        async function clearConversation() {
+            if (!isConnected) {
+                alert('Please connect to server first');
+                return;
+            }
+
+            if (!confirm('Clear conversation history?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/conversations/${conversationId}/clear`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // Clear the UI
+                    const historyDiv = document.getElementById('conversationHistory');
+                    historyDiv.innerHTML = `
+                        <div class="ai-message">
+                            <strong>🤖 Kenya Sugar AI Assistant</strong><br>
+                            Conversation cleared! I'm ready for new questions about Kenya's sugar sector.
+                        </div>
+                    `;
+                } else {
+                    addMessage('Failed to clear conversation history.', 'ai', 'error');
+                }
+            } catch (error) {
+                addMessage('Error clearing conversation.', 'ai', 'error');
+                console.error('Clear conversation failed:', error);
+            }
+        }
+
+        async function loadConversationHistory() {
+            if (!isConnected) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/conversations/${conversationId}/history`);
+                const data = await response.json();
+                
+                if (data.success && data.messages.length > 0) {
+                    const historyDiv = document.getElementById('conversationHistory');
+                    historyDiv.innerHTML = ''; // Clear welcome message
+                    
+                    data.messages.forEach(msg => {
+                        addMessage(msg.content, msg.role === 'human' ? 'user' : 'ai');
+                    });
+                }
+            } catch (error) {
+                console.log('No previous conversation history');
+            }
+        }
+
+        // Update server URL when inputs change
+        document.getElementById('serverIP').addEventListener('input', updateServerURL);
+        document.getElementById('serverPort').addEventListener('input', updateServerURL);
+    </script>
+</body>
+</html>

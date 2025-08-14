@@ -433,16 +433,17 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
         timestamp = datetime.now().strftime('%H:%M:%S')
         print(f"[{timestamp}] {format % args}")
 
-def start_server(port=8000):
+def start_server(port=8000, host='0.0.0.0'):
     """Start the HTTP server"""
-    server_address = ('', port)
+    server_address = (host, port)
     httpd = HTTPServer(server_address, KenyaSugarHandler)
     
     print(f"🇰🇪 Kenya Sugar Board Analysis API Server")
-    print(f"🚀 Starting server on port {port}...")
-    print(f"🌐 Access at: http://localhost:{port}")
+    print(f"🚀 Starting server on {host}:{port}...")
+    print(f"🌐 Local access: http://localhost:{port}")
+    print(f"🌍 Remote access: http://{host}:{port}")
     print(f"📊 Health check: http://localhost:{port}/health")
-    print(f"📚 Features: Conversation Memory | Intelligent Responses | Kenya Sugar Focus")
+    print(f"📚 Features: Conversation Memory | Web Research Enhanced | Kenya Sugar Focus")
     print(f"⏹️  Press Ctrl+C to stop")
     
     try:
