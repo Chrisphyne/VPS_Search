@@ -1,2 +1,30 @@
 .ksbRAGvenv/
 rag_env/
+
+# Node.js dependencies
+node_modules/
+kenya-sugar-nextjs-ui/node_modules/
+
+# Next.js build output
+.next/
+kenya-sugar-nextjs-ui/.next/
+
+# Environment files
+.env.local
+kenya-sugar-nextjs-ui/.env.local
+
+# Log files
+*.log
+npm-debug.log*
+
+# Lock files (keep package.json but ignore lock files to reduce size)
+package-lock.json
+kenya-sugar-nextjs-ui/package-lock.json
+
+# Cache directories
+.cache/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
