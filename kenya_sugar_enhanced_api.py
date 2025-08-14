@@ -106,19 +106,19 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResult:
         # Check if we got a valid response
         response_text = result.get("response", "")
         if not response_text or not response_text.strip():
-            # Generate fallback response
-            fallback = analyzer.generate_fallback_response(req.query, "general")
+            # Use web research response
+            web_response = analyzer.get_web_research_response(req.query, "general")
             return AnalyzeResult(
                 success=True,
-                response=fallback,
+                response=web_response,
                 type=req.type or "comprehensive",
-                status="fallback_used",
-                provider="intelligent_fallback",
+                status="web_research_used",
+                provider="tavily_web_research",
                 conversation_id=req.conversation_id,
                 meta={
                     "query": req.query,
                     "timestamp": datetime.now().isoformat(),
-                    "note": "LLM returned empty response, used intelligent fallback"
+                    "note": "LLM returned empty response, used web research via Tavily"
                 }
             )
         
