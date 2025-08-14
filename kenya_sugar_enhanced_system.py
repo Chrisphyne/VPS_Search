@@ -373,8 +373,13 @@ Please provide a comprehensive analysis based on the available Kenya Sugar Board
                 self.conversation_state.add_message(AIMessage(content=error_response))
                 return {"messages": messages + [AIMessage(content=error_response)]}
         
-        # Create the graph
-        workflow = StateGraph({"messages": List})
+        # Create the graph with proper typing
+        from typing import TypedDict
+        
+        class AnalysisState(TypedDict):
+            messages: List[Any]
+        
+        workflow = StateGraph(AnalysisState)
         workflow.add_node("analyze", analyze_query)
         workflow.set_entry_point("analyze")
         workflow.add_edge("analyze", END)
