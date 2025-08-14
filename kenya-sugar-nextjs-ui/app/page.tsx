@@ -37,13 +37,18 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId] = useState('nextjs_user_001');
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Get API base URL from environment variable or default
+  const envApiUrl = process.env.API_BASE_URL || 'http://localhost:8000';
+  const urlParts = envApiUrl.replace('http://', '').split(':');
+  
   const [serverConfig, setServerConfig] = useState<ServerConfig>({
-    host: 'localhost',
-    port: '8000',
+    host: urlParts[0] || 'localhost',
+    port: urlParts[1] || '8000',
     isConnected: false
   });
 
-  const apiBaseUrl = `http://${serverConfig.host}:${serverConfig.port}`;
+  const apiBaseUrl = process.env.API_BASE_URL || `http://${serverConfig.host}:${serverConfig.port}`;
 
   useEffect(() => {
     // Add welcome message

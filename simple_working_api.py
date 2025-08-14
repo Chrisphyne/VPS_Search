@@ -282,13 +282,12 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
         path = parsed_path.path
         
         # Enable CORS
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        
         if path == '/health':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
             self.end_headers()
             
             response = {
@@ -311,6 +310,9 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
             self.end_headers()
             
             messages = conversations.get(conversation_id, [])
@@ -325,6 +327,9 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
         elif path == '/data/summary':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
             self.end_headers()
             
             response = {
@@ -356,11 +361,6 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         path = parsed_path.path
         
-        # Enable CORS
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        
         if path == '/analyze':
             # Read request body
             content_length = int(self.headers['Content-Length'])
@@ -374,6 +374,9 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
                 if not query:
                     self.send_response(400)
                     self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', 'Content-Type')
                     self.end_headers()
                     response = {"error": "Query is required"}
                     self.wfile.write(json.dumps(response).encode('utf-8'))
@@ -384,12 +387,18 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
                 self.end_headers()
                 self.wfile.write(json.dumps(result, indent=2).encode('utf-8'))
                 
             except json.JSONDecodeError:
                 self.send_response(400)
                 self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
                 self.end_headers()
                 response = {"error": "Invalid JSON"}
                 self.wfile.write(json.dumps(response).encode('utf-8'))
