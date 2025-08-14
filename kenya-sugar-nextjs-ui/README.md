@@ -39,7 +39,7 @@ The application will be available at `http://localhost:7550`
 
 ### Server Connection
 
-1. **Local Development**: The app defaults to `http://localhost:8000`
+1. **Local Development**: The app defaults to `http://localhost:7560`
 2. **Remote Server**: Click "Settings" and enter your server IP and port
 3. **Environment Variables**: Update `.env.local` for persistent configuration
 
@@ -47,14 +47,14 @@ The application will be available at `http://localhost:7550`
 
 ```bash
 # .env.local
-API_BASE_URL=http://your-server-ip:8000
+API_BASE_URL=http://your-server-ip:7560
 ```
 
 ## 📱 Usage
 
 ### 1. Connect to Server
 - Click the "Settings" button in the header
-- Enter your server IP address and port (default: 8000)
+- Enter your server IP address and port (default: 7560)
 - Click "Test Connection" to verify connectivity
 
 ### 2. Start Analyzing
@@ -134,7 +134,7 @@ vercel
 docker build -t kenya-sugar-ui .
 
 # Run container
-docker run -p 7550:7550 -e API_BASE_URL=http://your-server:8000 kenya-sugar-ui
+docker run -p 7550:7550 -e API_BASE_URL=http://your-server:7560 kenya-sugar-ui
 ```
 
 ### Manual Deployment
@@ -199,7 +199,7 @@ The interface is fully responsive and optimized for:
 
 1. **Connection Failed**
    - Verify API server is running on specified port
-   - Check firewall settings allow port 8000
+   - Check firewall settings allow port 7560
    - Ensure server binds to `0.0.0.0` for remote access
 
 2. **Build Errors**

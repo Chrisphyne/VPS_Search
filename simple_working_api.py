@@ -442,7 +442,7 @@ class KenyaSugarHandler(BaseHTTPRequestHandler):
         timestamp = datetime.now().strftime('%H:%M:%S')
         print(f"[{timestamp}] {format % args}")
 
-def start_server(port=8000, host='0.0.0.0'):
+def start_server(port=7560, host='0.0.0.0'):
     """Start the HTTP server"""
     server_address = (host, port)
     httpd = HTTPServer(server_address, KenyaSugarHandler)

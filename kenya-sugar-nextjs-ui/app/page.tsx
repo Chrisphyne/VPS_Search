@@ -39,12 +39,12 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   
   // Get API base URL from environment variable or default
-  const envApiUrl = process.env.API_BASE_URL || 'http://localhost:8000';
+  const envApiUrl = process.env.API_BASE_URL || 'http://localhost:7560';
   const urlParts = envApiUrl.replace('http://', '').split(':');
   
   const [serverConfig, setServerConfig] = useState<ServerConfig>({
     host: urlParts[0] || 'localhost',
-    port: urlParts[1] || '8000',
+    port: urlParts[1] || '7560',
     isConnected: false
   });
 
