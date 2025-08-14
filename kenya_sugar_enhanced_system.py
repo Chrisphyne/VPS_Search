@@ -354,16 +354,26 @@ Analysis focus: {analysis_type}
 Please provide a comprehensive analysis based on the available Kenya Sugar Board data.
 """
                 
-                # Execute analysis
-                result = self.data_analyst.invoke({
-                    "messages": [HumanMessage(content=context_query)]
-                })
-                
-                if result and "messages" in result:
-                    response_content = result["messages"][-1].content
-                    self.conversation_state.add_message(AIMessage(content=response_content))
-                    return {"messages": messages + [AIMessage(content=response_content)]}
-                else:
+                # Execute analysis with fallback handling
+                try:
+                    result = self.data_analyst.invoke({
+                        "messages": [HumanMessage(content=context_query)]
+                    })
+                    
+                    if result and "messages" in result and len(result["messages"]) > 0:
+                        response_content = result["messages"][-1].content
+                        if response_content and response_content.strip():
+                            self.conversation_state.add_message(AIMessage(content=response_content))
+                            return {"messages": messages + [AIMessage(content=response_content)]}
+                    
+                    # If no valid response, use fallback
+                    print("⚠️ LLM returned empty response, using intelligent fallback")
+                    fallback_response = self.generate_fallback_response(query, analysis_type)
+                    self.conversation_state.add_message(AIMessage(content=fallback_response))
+                    return {"messages": messages + [AIMessage(content=fallback_response)]}
+                    
+                except Exception as llm_error:
+                    print(f"⚠️ LLM error: {llm_error}, using intelligent fallback")
                     fallback_response = self.generate_fallback_response(query, analysis_type)
                     self.conversation_state.add_message(AIMessage(content=fallback_response))
                     return {"messages": messages + [AIMessage(content=fallback_response)]}

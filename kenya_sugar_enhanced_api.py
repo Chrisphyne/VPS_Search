@@ -103,9 +103,28 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResult:
         # Use the enhanced analyzer
         result = analyzer.analyze(req.query, req.conversation_id or "default")
         
+        # Check if we got a valid response
+        response_text = result.get("response", "")
+        if not response_text or not response_text.strip():
+            # Generate fallback response
+            fallback = analyzer.generate_fallback_response(req.query, "general")
+            return AnalyzeResult(
+                success=True,
+                response=fallback,
+                type=req.type or "comprehensive",
+                status="fallback_used",
+                provider="intelligent_fallback",
+                conversation_id=req.conversation_id,
+                meta={
+                    "query": req.query,
+                    "timestamp": datetime.now().isoformat(),
+                    "note": "LLM returned empty response, used intelligent fallback"
+                }
+            )
+        
         return AnalyzeResult(
             success=True,
-            response=result["response"],
+            response=response_text,
             type=req.type or "comprehensive",
             status=result["status"],
             provider=result.get("provider"),
